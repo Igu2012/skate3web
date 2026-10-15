@@ -1,41 +1,41 @@
 # Skate3Web
 
-Build web local do projeto `skate-3-rust-engine`, com uma interface enxuta e publicação estática em GitHub Pages.
+A lightweight WebAssembly build of `skate-3-rust-engine`, with a simplified interface and a static-site layout for GitHub Pages.
 
-**Site:** https://igu2012.github.io/skate3web/
+**GitHub Pages target:** https://igu2012.github.io/skate3web/ (Pages must be enabled for `main` / `/docs` in the repository settings.)
 
-## Conteúdo
+## Repository layout
 
-- `engine/`: código-fonte do engine, baseado na branch [`cleanroom-web`](https://github.com/andrewnakas/skate-3-rust-engine/tree/cleanroom-web). A página web foi simplificada para iniciar diretamente no jogo, sem botão de tela cheia.
-- `docs/`: build WebAssembly já compilado e arquivos estáticos servidos pelo GitHub Pages. Contém o seletor simples de mapa e os nove parques incluídos na release clean pack.
-- `CREDITOS-E-ORIGEM.md`: proveniência dos projetos e dos assets.
+- `engine/` — engine source based on the [`cleanroom-web` branch](https://github.com/andrewnakas/skate-3-rust-engine/tree/cleanroom-web). The web page has been simplified to start directly in the game, without a fullscreen button.
+- `docs/` — prebuilt WebAssembly application and static files for GitHub Pages, including the simple map selector and the nine parks from the clean-pack release.
+- `ATTRIBUTION.md` — project and asset provenance.
 
-Não são incluídos ISOs nem arquivos retail do Skate 3, e os ZIPs opcionais de mods não fazem parte deste pacote.
+No ISO or retail Skate 3 files are included. Optional mod ZIPs are not part of this package.
 
-## Arquivos grandes
+## Large files and pack chunks
 
-O pack principal é dividido em `docs/core.pack.part0` (95.000.000 bytes) e `docs/core.pack.part1`. O `loader.js` carrega as partes e concatena os bytes automaticamente antes de iniciar o engine. Os arquivos do WASM e dos mapas também permanecem abaixo do limite individual de 100 MB do GitHub; não é necessário juntar arquivos manualmente.
+The main pack is split into `docs/core.pack.part0` (95,000,000 bytes) and `docs/core.pack.part1`. `loader.js` downloads the parts and concatenates them automatically before starting the engine. The WASM binary and map files are also below GitHub's 100 MB per-file limit; no manual joining is required.
 
-## Rodar a página compilada
+## Run the prebuilt site locally
 
-Use um servidor HTTP estático (não abra `docs/index.html` diretamente como `file://`):
+Serve the files over HTTP; do not open `docs/index.html` directly as a `file://` URL:
 
 ```bash
 python3 -m http.server 8000 --directory docs
 ```
 
-Acesse `http://localhost:8000/` em um navegador Chromium/Edge com suporte a WebGPU e um adaptador gráfico disponível.
+Open `http://localhost:8000/` in Chromium or Edge 113+ with WebGPU support and an available graphics adapter.
 
-## Recompilar a partir do source
+## Rebuild from source
 
-A build atual em `docs/` já está pronta. Para recompilar, instale Rust, adicione o alvo `wasm32-unknown-unknown`, instale `wasm-bindgen-cli` na versão `0.2.127` e obtenha a release [Clean pack 2026-10-11](https://github.com/andrewnakas/skate3-cleanroom/releases/tag/clean-pack-2026-10-11). Extraia os dados clean localmente e, a partir de `engine/`, rode no PowerShell:
+The current build is already available in `docs/`. To rebuild it, install Rust, add the `wasm32-unknown-unknown` target, install `wasm-bindgen-cli` version `0.2.127`, and obtain the [Clean pack 2026-10-11 release](https://github.com/andrewnakas/skate3-cleanroom/releases/tag/clean-pack-2026-10-11). Extract the clean data locally, then run this from `engine/` in PowerShell:
 
 ```powershell
-powershell -File tools/build_web.ps1 -Pack <pasta-do-pack-extraído> -Out ../docs -DefaultMap StartPark
+powershell -File tools/build_web.ps1 -Pack <extracted-pack-directory> -Out ../docs -DefaultMap StartPark
 ```
 
-A documentação técnica completa está em `engine/docs/web.md`.
+See `engine/docs/web.md` for the full technical documentation.
 
-## Créditos e licença
+## Credits and licensing
 
-Veja [`CREDITOS-E-ORIGEM.md`](CREDITOS-E-ORIGEM.md). Este projeto é não oficial e não afiliado à EA; as marcas Skate e Skate 3 pertencem aos respectivos titulares. A atribuição não cria uma licença adicional.
+See [`ATTRIBUTION.md`](ATTRIBUTION.md). This is an unofficial project and is not affiliated with EA. Skate and Skate 3 are trademarks of their respective owners. Attribution does not grant any additional license.
