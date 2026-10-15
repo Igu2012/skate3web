@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Skate 3">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Skate 3</title>
+<style>
+  :root { color-scheme: dark; --bg: #080a0d; --fg: #f3f5f7; --muted: #a2aab4; --accent: #73c8cf; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--fg);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; touch-action: none;
+    overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+  #game, #bevy { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #bevy { display: block; outline: none; }
+  #overlay { position: fixed; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+    padding: 20px; background: var(--bg); }
+  #panel { width: min(360px, 100%); text-align: center; }
+  h1 { margin: 0 0 14px; font-size: 23px; letter-spacing: .12em; font-weight: 750; }
+  #status { min-height: 2.8em; color: var(--muted); white-space: pre-wrap; }
+  #status.error { color: #ff7b72; }
+  .bar { height: 4px; margin: 14px 0; overflow: hidden; border-radius: 9px; background: #20252b; }
+  .bar > div { width: 0; height: 100%; background: var(--accent); transition: width .15s; }
+  #mapbar { position: fixed; right: 12px; bottom: 12px; z-index: 3; display: flex; align-items: center; gap: 7px;
+    padding: 6px 9px; border: 1px solid #ffffff22; border-radius: 6px; background: #080a0dcc; color: var(--muted); font-size: 12px; }
+  button, select { max-width: 62vw; border: 1px solid #ffffff2d; border-radius: 4px; padding: 4px 7px;
+    background: #15191e; color: var(--fg); font: inherit; }
+  #toast { position: fixed; top: 12px; left: 50%; z-index: 4; display: none; transform: translateX(-50%);
+    max-width: 90vw; padding: 6px 12px; border-radius: 6px; background: #080a0ddd; }
+  #hint { display: none; }
+  #mapcredit, #roommenu, #roombtn, #roomleave { display: none !important; }
+</style>
+</head>
+<body>
+<div id="game"><canvas id="bevy" tabindex="0"></canvas></div>
+<div id="mapbar">
+  <a id="mapcredit" target="_blank" rel="noopener" hidden></a>
+  <label for="map">Mapa</label><select id="map" aria-label="Escolher mapa"></select>
+  <input id="mapfile" type="file" accept=".skate" hidden>
+  <select id="roommenu" hidden></select><button id="roombtn" type="button" hidden>Multiplayer</button>
+  <button id="roomleave" type="button" hidden>Sair</button>
+</div>
+<div id="hint"></div><div id="toast"></div>
+<div id="overlay"><div id="panel">
+  <h1>SKATE 3</h1>
+  <div id="status">Iniciando...</div>
+  <div class="bar"><div id="progress"></div></div>
+</div></div>
+<script type="module" src="./loader.js"></script>
+<script type="module" src="./touch.js"></script>
+</body>
+</html>
