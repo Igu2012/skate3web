@@ -1,4 +1,4 @@
-import { mapArtwork, mapTitle } from './map-art.js';
+import { mapPhoto, mapPreview, mapTitle } from './map-art.js';
 
 const screen = document.getElementById('menu-screen');
 const slide = document.getElementById('map-slide');
@@ -26,11 +26,12 @@ function render() {
   if (!maps.length) return;
   const map = maps[active];
   const title = mapTitle(map.name);
+  const photo = mapPhoto(map.name);
+  document.documentElement.style.setProperty('--scene-image', photo ? `url("${photo.src}")` : 'none');
   const mb = (map.size / 1e6).toFixed(1);
   slide.innerHTML = `
     <div class="preview-frame">
-      ${mapArtwork(map.name)}
-      <span class="preview-badge">Illustrative preview</span>
+      ${mapPreview(map.name)}
     </div>
     <div class="park-details">
       <div class="park-overline">PARK ${String(active + 1).padStart(2, '0')} <span>/ ${String(maps.length).padStart(2, '0')}</span></div>

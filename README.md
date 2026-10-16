@@ -8,10 +8,10 @@ A lightweight WebAssembly build of `skate-3-rust-engine`, with a simplified inte
 
 - `engine/` — engine source based on the [`cleanroom-web` branch](https://github.com/andrewnakas/skate-3-rust-engine/tree/cleanroom-web). Its web flow uses a park carousel, a progressive loading screen, and direct entry into the game. The fullscreen button and on-screen touchscreen pad have been removed.
 - `docs/` — prebuilt WebAssembly application and static files for GitHub Pages, including the nine parks from the clean-pack release.
-- `engine/web/map-art.js` and `docs/map-art.js` — original illustrative SVG previews used by the park cards. They are not in-game screenshots or exact map renders.
+- `engine/web/map-art.js` and `docs/map-art.js` — linked, real-gameplay/map photos for Start Park, Black Box Park, Maloof Money Cup, and Mega Park; other parks use original illustrative SVG previews until an exact photo is verified.
 - `ATTRIBUTION.md` — project and asset provenance.
 
-The park selector shows each map's title and download size in MB. The loading screen reports downloaded MB out of the total and starts the game automatically when loading is complete. Gameplay requires a keyboard or a physical controller; no touchscreen pad is provided. If WebGPU is unavailable, the browser displays a native dialog with troubleshooting steps and links.
+The park selector uses the blue, translucent menu treatment shown in the supplied Skate 3 reference, while retaining the simplified carousel. Four cards show a real Skate 3 map/gameplay photo linked to its source; these are retail-game reference images, not screenshots of this clean-room web build. Five other parks use clearly identified illustrative previews because an exact, attributable photo was not verified. The selector shows each map's title and download size in MB. The loading screen reports downloaded MB out of the total and starts the game automatically when loading is complete. Gameplay requires a keyboard or a physical controller; no touchscreen pad is provided. If WebGPU is unavailable, the browser displays a native dialog with troubleshooting steps and links.
 
 No ISO or retail Skate 3 files are included. Optional mod ZIPs are not part of this package.
 

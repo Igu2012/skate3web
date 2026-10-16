@@ -10,6 +10,13 @@ const TITLES = {
   StartPark: 'Start Park',
 };
 
+const PHOTO_PREVIEWS = {
+  BlackBoxPark: { src: './images/blackbox-gameplay.jpg', alt: 'Skate 3 Black Box Park gameplay image', href: 'https://www.youtube.com/watch?v=LlPcuxB5-0A', label: 'GAMEPLAY PHOTO · SOURCE' },
+  MaloofMoneyCup: { src: './images/maloof-gameplay.jpg', alt: 'Skate 3 Maloof Money Cup gameplay image', href: 'https://www.youtube.com/watch?v=lJIMvnZ-b1o', label: 'GAMEPLAY PHOTO · SOURCE' },
+  MegaPark: { src: './images/megapark-gameplay.webp', alt: 'Skate 3 Super Ultra Mega Park map image', href: 'https://skate.fandom.com/wiki/Super_Ultra_Mega_Park', label: 'MAP PHOTO · WIKI SOURCE' },
+  StartPark: { src: './images/startpark-gameplay.jpg', alt: 'Skate 3 Basic Training gameplay at the starting skatepark', href: 'https://www.youtube.com/watch?v=YRXfuF291_k&amp;t=55s', label: 'GAMEPLAY PHOTO · SOURCE' },
+};
+
 const PARK_ART = {
   BlackBoxPark: { accent: '#f07848', details: `<g>
     <path d="M38 264V214Q42 178 86 155L177 121V264Z" fill="#d7643d"/><path d="M38 264V214Q42 178 86 155L177 121V141L93 173Q61 190 58 218V264Z" fill="#a64731"/>
@@ -78,6 +85,16 @@ const PARK_ART = {
 
 export function mapTitle(name) {
   return TITLES[name] ?? String(name).replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+}
+
+export function mapPhoto(name) {
+  return PHOTO_PREVIEWS[name] ?? null;
+}
+
+export function mapPreview(name) {
+  const photo = mapPhoto(name);
+  if (photo) return `<img class="park-photo" src="${photo.src}" alt="${photo.alt}" loading="eager"><span class="preview-shade"></span><a class="preview-badge" href="${photo.href}" target="_blank" rel="noreferrer">${photo.label}</a>`;
+  return `${mapArtwork(name)}<span class="preview-badge">Illustrative preview</span>`;
 }
 
 export function mapArtwork(name) {
