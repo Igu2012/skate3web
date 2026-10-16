@@ -6,15 +6,18 @@ A lightweight WebAssembly build of `skate-3-rust-engine`, with a simplified inte
 
 ## Repository layout
 
-- `engine/` — engine source based on the [`cleanroom-web` branch](https://github.com/andrewnakas/skate-3-rust-engine/tree/cleanroom-web). The web page has been simplified to start directly in the game, without a fullscreen button.
-- `docs/` — prebuilt WebAssembly application and static files for GitHub Pages, including the simple map selector and the nine parks from the clean-pack release.
+- `engine/` — engine source based on the [`cleanroom-web` branch](https://github.com/andrewnakas/skate-3-rust-engine/tree/cleanroom-web). Its web flow uses a park carousel, a progressive loading screen, and direct entry into the game. The fullscreen button and on-screen touchscreen pad have been removed.
+- `docs/` — prebuilt WebAssembly application and static files for GitHub Pages, including the nine parks from the clean-pack release.
+- `engine/web/map-art.js` and `docs/map-art.js` — original illustrative SVG previews used by the park cards. They are not in-game screenshots or exact map renders.
 - `ATTRIBUTION.md` — project and asset provenance.
+
+The park selector shows each map's title and download size in MB. The loading screen reports downloaded MB out of the total and starts the game automatically when loading is complete. Gameplay requires a keyboard or a physical controller; no touchscreen pad is provided. If WebGPU is unavailable, the browser displays a native dialog with troubleshooting steps and links.
 
 No ISO or retail Skate 3 files are included. Optional mod ZIPs are not part of this package.
 
 ## Large files and pack chunks
 
-The main pack is split into `docs/core.pack.part0` (95,000,000 bytes) and `docs/core.pack.part1`. `loader.js` downloads the parts and concatenates them automatically before starting the engine. The WASM binary and map files are also below GitHub's 100 MB per-file limit; no manual joining is required.
+The current core pack is `docs/core.pack` (about 94.7 MB). The build script splits any asset that exceeds its configured chunk size into `.partN` files, and `loader.js` downloads and concatenates those parts automatically. The current WASM binary and each map are also below GitHub's 100 MB per-file limit; no manual joining is required.
 
 ## Run the prebuilt site locally
 

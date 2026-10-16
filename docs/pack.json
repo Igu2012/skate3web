@@ -1,17 +1,16 @@
 {
  "version": 1,
  "engine": {
-  "size": 50687213,
-  "hash": "ed6e39edd75859d5"
+  "size": 50665259,
+  "hash": "334cf11f1d54753b"
  },
  "core": {
-  "size": 154390077,
+  "size": 94731967,
   "parts": [
-   "core.pack.part0",
-   "core.pack.part1"
+   "core.pack"
   ],
-  "files": 552,
-  "hash": "b31795656330cfdc"
+  "files": 534,
+  "hash": "95198ac8f9811269"
  },
  "maps": [
   {

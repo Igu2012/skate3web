@@ -3,23 +3,36 @@
 // The map is one of the pack's own, a community map fetched from
 // skatemods.com (?smap=<id>), any .skate URL (?mapurl=) or a local file.
 import { DEFAULT_RELAY, joinRoom, listRooms, newRoomCode, relayUp, validRoom } from './net.js';
+import { mapTitle } from './map-art.js';
 
 const statusEl = document.getElementById('status');
 const barEl = document.getElementById('progress');
 const overlay = document.getElementById('overlay');
-const picker = document.getElementById('map');
+const countEl = document.getElementById('progress-count');
+const WEBGPU_GUIDE = 'https://developer.chrome.com/docs/web-platform/webgpu/';
 
-function status(text, error = false) {
+function status(text) {
   statusEl.textContent = text;
-  statusEl.classList.toggle('error', error);
+}
+function returnToMenu() {
+  const url = new URL(location.href);
+  for (const name of ['map', 'smap', 'mapurl', 'local']) url.searchParams.delete(name);
+  location.replace(`${url.pathname}${url.search}${url.hash}`);
 }
 globalThis.skateFatal = (message) => {
-  overlay.style.display = 'flex';
-  status(message, true);
+  const detail = String(message || 'Unknown startup error').slice(0, 900);
+  const webgpu = /webgpu|gpu|adapter|device|shader|graphics/i.test(detail);
+  const help = webgpu
+    ? `WebGPU could not start. Use an up-to-date desktop browser such as Chrome or Edge, enable hardware acceleration, and update your graphics driver. You can check the browser status at chrome://gpu.\n\nWebGPU guide: ${WEBGPU_GUIDE}\nBrowser support: https://caniuse.com/webgpu\n\nDetails: ${detail}\n\nOpen the WebGPU guide in a new tab?`
+    : `The game could not start. Check your connection, reload the page, and try again.\n\nDetails: ${detail}\n\nWebGPU troubleshooting: ${WEBGPU_GUIDE}\n\nOpen the troubleshooting guide in a new tab?`;
+  if (window.confirm(help)) {
+    const tab = window.open(WEBGPU_GUIDE, '_blank');
+    if (tab) tab.opener = null;
+    if (!tab) { location.assign(WEBGPU_GUIDE); return; }
+  }
+  returnToMenu();
 };
-// Browsers (iOS above all) start Web Audio suspended until a user gesture, and
-// the engine opens its audio output at startup, before any tap. Track every
-// AudioContext it creates and resume them on the first tap/click/key.
+// Resume Web Audio after the first user gesture in browsers that suspend it.
 const audioContexts = [];
 for (const name of ['AudioContext', 'webkitAudioContext']) {
   const Base = globalThis[name];
@@ -38,7 +51,7 @@ const unlockAudio = () => {
     if (ctx.state !== 'running') ctx.resume().then(() => console.log(`SKATE_AUDIO resumed state=${ctx.state}`), () => {});
   }
 };
-for (const event of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) {
+for (const event of ['pointerdown', 'pointerup', 'click', 'keydown']) {
   addEventListener(event, unlockAudio, { capture: true, passive: true });
 }
 
@@ -339,16 +352,18 @@ function setupRoomButton(params, mapLabel, builtIn) {
 }
 
 async function main() {
-  if (!navigator.gpu) {
-    status('This page needs a WebGPU browser: Chrome/Edge 113+ (or Safari 26+ / Firefox 141+ with WebGPU enabled).', true);
-    return;
-  }
-  if (!(await navigator.gpu.requestAdapter())) {
-    status('WebGPU is present but no GPU adapter is available. Check chrome://gpu or enable hardware acceleration.', true);
-    return;
-  }
-  const pack = await (await fetch('pack.json', { cache: 'no-cache' })).json();
   const params = new URLSearchParams(location.search);
+  const hasSelection = ['map', 'smap', 'mapurl', 'local'].some((name) => params.has(name));
+  if (!hasSelection) return;
+  document.getElementById('menu-screen').hidden = true;
+  overlay.hidden = false;
+  status('Checking graphics support...');
+  if (!navigator.gpu) throw new Error('WebGPU is not available in this browser.');
+  let adapter;
+  try { adapter = await navigator.gpu.requestAdapter(); }
+  catch (e) { throw new Error(`WebGPU adapter request failed: ${e.message || e}`); }
+  if (!adapter) throw new Error('WebGPU is available, but no graphics adapter was found.');
+  const pack = await (await fetch('pack.json', { cache: 'no-cache' })).json();
   const cache = await openCache();
   const builtIn = new Set(['__test', ...pack.maps.map((m) => m.name)]);
   // A community map, a URL or a local file; null for the pack's own maps.
@@ -356,49 +371,24 @@ async function main() {
   const wanted = params.get('map') ?? pack.default;
   const map = external ? null : pack.maps.find((m) => m.name === wanted) ?? null;
 
-  picker.add(new Option('Test world', '__test', false, !external && map === null));
-  for (const m of pack.maps) {
-    picker.add(new Option(`${m.name} (${(m.size / 1e6).toFixed(0)} MB)`, m.name, false, m === map));
-  }
-  if (external && !params.get('smap')) picker.add(new Option(external.label, '', false, true));
-  const community = document.createElement('optgroup');
-  community.label = 'Community maps (skatemods.com)';
-  picker.add(community);
-  listCommunity(community, params.get('smap'));
-  const more = document.createElement('optgroup');
-  more.label = 'Your own';
-  more.append(new Option('Open .skate file...', 'open-file'));
-  picker.add(more);
-  const fileInput = document.getElementById('mapfile');
-  picker.onchange = () => {
-    const value = picker.value;
-    if (value === 'open-file') fileInput.click();
-    else if (value.startsWith('smap:')) go('smap', value.slice(5));
-    else if (value) globalThis.skateSelectMap(value);
-  };
-  fileInput.onchange = async () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      checkSkate(bytes, file.name);
-      if (!cache) throw new Error('This browser has storage switched off (private window?), so the file cannot be kept across the reload.');
-      await cache.put(LOCAL_KEY, new Response(bytes, { headers: { 'Content-Type': 'application/octet-stream' } }));
-      go('local', file.name.replace(/\.skate$/i, ''));
-    } catch (e) {
-      globalThis.skateFatal(String(e.message || e));
-    }
-  };
-
   const engine = pack.engine;
   let total = pack.core.size + (map ? map.size : 0) + (external ? external.size : 0) + (engine ? engine.size : 0);
   let done = 0;
-  const shown = external ? external.label : map ? map.name : 'test world';
+  const shown = external ? external.label : map ? mapTitle(map.name) : 'Test world';
+  document.getElementById('loading-title').textContent = `Loading ${shown}`;
+  const updateProgress = () => {
+    const percent = total > 0 ? Math.min(100, 100 * done / total) : 0;
+    barEl.style.width = `${percent.toFixed(1)}%`;
+    barEl.parentElement.setAttribute('aria-valuenow', String(Math.round(percent)));
+    countEl.textContent = `${(done / 1e6).toFixed(1)} / ${(total / 1e6).toFixed(1)} MB`;
+  };
   const tick = (n) => {
     done += n;
-    barEl.style.width = `${Math.min(100, 100 * done / total).toFixed(1)}%`;
-    status(`Loading ${shown}... ${(done / 1e6).toFixed(0)} / ${(total / 1e6).toFixed(0)} MB`);
+    updateProgress();
+    status(`Downloading ${shown}...`);
   };
+  status(`Downloading ${shown}...`);
+  updateProgress();
   const key = (name, hash) => (hash ? `cache/${name}.${hash}` : null);
   const keep = new Set([
     engine && `engine.${engine.hash}`,
@@ -407,12 +397,11 @@ async function main() {
     // The community map being played stays cached; others are dropped.
     external && external.key,
   ].filter(Boolean));
-  // Phones: iOS reloads a tab that goes much past ~1 GB, so textures are halved
-  // and MSAA is off there (?lite=0 / ?lite=1 override the touch-screen guess).
+  // This streamlined build does not add a touchscreen controller or mobile quality mode.
   globalThis.SKATE_DEBUGMEM = params.has('debugmem');
   session.map = shown;
-  globalThis.SKATE_LITE = (params.get('lite') ?? (matchMedia('(pointer: coarse)').matches ? '1' : '0')) === '1';
-  session.lite = globalThis.SKATE_LITE;
+  globalThis.SKATE_LITE = false;
+  session.lite = false;
   if (previousCrumb && !previousCrumb.clean && previousCrumb.frames > 0) {
     const note = document.createElement('div');
     note.id = 'lastcrash';
@@ -424,7 +413,7 @@ async function main() {
   let [core, mapBytes, wasmBytes] = await Promise.all([
     cachedParts(cache, key('core', pack.core.hash), pack.core.parts, pack.core.size, tick),
     map ? cachedParts(cache, key(`map-${map.name}`, map.hash), map.parts, map.size, tick)
-      : external ? fetchMap(external, cache, tick, (n) => { total += n - external.size; external.size = n; }) : Promise.resolve(null),
+      : external ? fetchMap(external, cache, tick, (n) => { total += n - external.size; external.size = n; updateProgress(); }) : Promise.resolve(null),
     engine ? cachedParts(cache, key('engine', engine.hash), ['skate3rust_bg.wasm'], engine.size, tick) : Promise.resolve(null),
   ]);
   pruneCache(cache, keep);
@@ -463,11 +452,9 @@ async function main() {
   // Multiplayer room (?room=CODE): join before the engine starts so it can open
   // its session at boot. The host is whoever was in the room first.
   const mapLabel = external ? external.name : map ? map.name : 'Test world';
-  setupRoomButton(params, mapLabel, builtIn);
   const room = params.get('room');
   if (room) {
     if (!validRoom(room)) throw new Error('?room= must be 4-24 letters, digits, - or _.');
-    document.getElementById('roommenu').hidden = true;
     status(`Joining room ${room}...`);
     const relay = params.get('relay') || DEFAULT_RELAY;
     const mapId = external ? external.key : map ? `${map.name}.${map.hash}` : '__test';
@@ -484,15 +471,12 @@ async function main() {
   } catch (e) {
     // Bevy's winit loop unwinds with a control-flow exception on the web; only report real failures.
     if (!String(e).includes('Using exceptions for control flow')) {
-      globalThis.skateFatal(`Engine failed: ${e}`);
-      throw e;
+      throw new Error(`Engine failed: ${e}`);
     }
   }
   // main() has loaded everything synchronously; the render loop is running.
-  if (!statusEl.classList.contains('error')) {
-    overlay.style.display = 'none';
-    document.getElementById('bevy').focus();
-  }
+  overlay.hidden = true;
+  document.getElementById('bevy').focus();
 }
 
 main().catch((e) => globalThis.skateFatal(String(e && e.stack || e)));

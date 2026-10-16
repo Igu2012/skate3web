@@ -3,55 +3,127 @@
 <head>
 <meta charset="utf-8">
 <link rel="icon" href="data:,">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Skate 3">
-<link rel="manifest" href="manifest.webmanifest">
-<title>Skate 3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Choose a clean-room park and play the Skate 3 web build.">
+<title>Skate3Web — Choose a Park</title>
 <style>
-  :root { color-scheme: dark; --bg: #080a0d; --fg: #f3f5f7; --muted: #a2aab4; --accent: #73c8cf; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--fg);
-    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; touch-action: none;
-    overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
-  #game, #bevy { position: fixed; inset: 0; width: 100%; height: 100%; }
-  #bevy { display: block; outline: none; }
-  #overlay { position: fixed; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
-    padding: 20px; background: var(--bg); }
-  #panel { width: min(360px, 100%); text-align: center; }
-  h1 { margin: 0 0 14px; font-size: 23px; letter-spacing: .12em; font-weight: 750; }
-  #status { min-height: 2.8em; color: var(--muted); white-space: pre-wrap; }
-  #status.error { color: #ff7b72; }
-  .bar { height: 4px; margin: 14px 0; overflow: hidden; border-radius: 9px; background: #20252b; }
-  .bar > div { width: 0; height: 100%; background: var(--accent); transition: width .15s; }
-  #mapbar { position: fixed; right: 12px; bottom: 12px; z-index: 3; display: flex; align-items: center; gap: 7px;
-    padding: 6px 9px; border: 1px solid #ffffff22; border-radius: 6px; background: #080a0dcc; color: var(--muted); font-size: 12px; }
-  button, select { max-width: 62vw; border: 1px solid #ffffff2d; border-radius: 4px; padding: 4px 7px;
-    background: #15191e; color: var(--fg); font: inherit; }
-  #toast { position: fixed; top: 12px; left: 50%; z-index: 4; display: none; transform: translateX(-50%);
-    max-width: 90vw; padding: 6px 12px; border-radius: 6px; background: #080a0ddd; }
-  #hint { display: none; }
-  #mapcredit, #roommenu, #roombtn, #roomleave { display: none !important; }
+  :root { color-scheme: dark; --bg:#0b0f10; --panel:#141a1c; --panel2:#1b2326; --fg:#f5f3ed; --muted:#9ca9a8; --accent:#ed7545; --teal:#6fd0bd; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; width:100%; min-height:100%; background:var(--bg); color:var(--fg); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  body { overflow:hidden; }
+  button { font:inherit; color:inherit; }
+  #game,#bevy { position:fixed; inset:0; width:100%; height:100%; }
+  #game { z-index:0; background:#090d0e; }
+  #bevy { display:block; outline:none; }
+  .screen { position:fixed; inset:0; z-index:2; }
+  #menu-screen { display:grid; grid-template-rows:auto 1fr auto; gap:24px; padding:clamp(18px,4vw,46px); background:radial-gradient(ellipse at 52% 43%,#202a2d 0%,#101617 48%,#0b0f10 100%); }
+  .brand-row { display:flex; align-items:center; justify-content:space-between; width:min(100%,1040px); margin:0 auto; }
+  .wordmark { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:900; letter-spacing:.08em; }
+  .wordmark-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:9px 9px 9px 2px; background:var(--accent); color:#111; font-size:15px; letter-spacing:-.08em; transform:skew(-7deg); }
+  .wordmark-text { color:var(--fg); }
+  .wordmark-text span { color:var(--teal); }
+  .build-tag { color:#8b9998; font-size:10px; letter-spacing:.18em; font-weight:700; }
+  .selector { align-self:center; width:min(100%,720px); margin:0 auto; text-align:center; }
+  .eyebrow { color:var(--teal); font-size:11px; font-weight:800; letter-spacing:.22em; }
+  .selector h1 { margin:7px 0 6px; font-size:clamp(28px,5vw,42px); line-height:1.08; letter-spacing:-.04em; }
+  .selector-lead { margin:0 0 24px; color:var(--muted); font-size:14px; }
+  .carousel { display:grid; grid-template-columns:48px minmax(0,1fr) 48px; align-items:center; gap:12px; }
+  .arrow { display:grid; place-items:center; width:44px; height:44px; border:1px solid #ffffff24; border-radius:50%; background:#ffffff08; color:#e7ece6; font-size:26px; line-height:1; cursor:pointer; transition:background .18s,border-color .18s,transform .18s; }
+  .arrow:hover:not(:disabled) { background:#ffffff18; border-color:#ffffff70; transform:scale(1.04); }
+  .arrow:disabled { opacity:.45; cursor:default; }
+  #map-slide { min-width:0; border:1px solid #ffffff18; border-radius:18px; overflow:hidden; background:linear-gradient(145deg,#192124,#101617); box-shadow:0 24px 80px #0008; opacity:1; transform:translateY(0); transition:opacity .18s,transform .18s; }
+  #map-slide:not(.arriving) { opacity:.76; transform:translateY(4px); }
+  .preview-frame { position:relative; width:100%; aspect-ratio:16/8.2; overflow:hidden; background:#172124; }
+  .park-art { display:block; width:100%; height:100%; }
+  .preview-badge { position:absolute; left:14px; bottom:12px; padding:5px 8px; border:1px solid #ffffff35; border-radius:999px; background:#0b1112c9; color:#d6e0dc; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  .park-details { display:flex; align-items:center; gap:20px; padding:16px 20px 18px; text-align:left; }
+  .park-overline { flex:none; color:var(--teal); font-size:10px; font-weight:800; letter-spacing:.14em; }
+  .park-overline span { color:#63706f; }
+  .park-details h2 { flex:1; min-width:0; margin:0; font-size:clamp(19px,3vw,26px); letter-spacing:-.03em; }
+  .park-size { flex:none; margin:0; color:#e8eee8; font-size:13px; font-weight:750; white-space:nowrap; }
+  .park-size span { color:var(--muted); font-size:11px; font-weight:500; }
+  .slide-nav { display:flex; align-items:center; justify-content:center; gap:12px; min-height:24px; margin-top:13px; }
+  #map-dots { display:flex; justify-content:center; gap:7px; }
+  .map-dot { width:7px; height:7px; padding:0; border:0; border-radius:99px; background:#61706f; cursor:pointer; transition:width .2s,background .2s; }
+  .map-dot.active { width:21px; background:var(--accent); }
+  #map-position { min-width:42px; color:#899694; font-size:10px; font-variant-numeric:tabular-nums; text-align:left; }
+  .actions { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:21px; }
+  #start-game { min-width:210px; padding:13px 28px; border:0; border-radius:999px; background:var(--accent); color:#161311; font-size:13px; font-weight:850; letter-spacing:.05em; cursor:pointer; box-shadow:0 8px 25px #ed754536; transition:transform .18s,filter .18s; }
+  #start-game:hover:not(:disabled) { transform:translateY(-2px); filter:brightness(1.08); }
+  #start-game:disabled { opacity:.45; cursor:wait; }
+  .input-note { margin:0; color:#81908e; font-size:11px; }
+  #menu-status { margin:14px 0 0; color:var(--muted); font-size:12px; }
+  .footer { display:flex; justify-content:center; color:#677371; font-size:10px; letter-spacing:.04em; text-align:center; }
+  #overlay { display:grid; place-items:center; z-index:5; padding:24px; background:radial-gradient(ellipse at 50% 42%,#1c2729,#0b0f10 72%); }
+  #overlay[hidden],#menu-screen[hidden] { display:none !important; }
+  .loading-card { width:min(100%,520px); text-align:center; }
+  .loading-mark { display:grid; place-items:center; width:42px; height:42px; margin:0 auto 24px; border:1px solid #ffffff24; border-radius:13px; color:var(--accent); font-size:18px; font-weight:900; transform:rotate(-4deg); }
+  .loading-eyebrow { margin:0 0 8px; color:var(--teal); font-size:10px; font-weight:800; letter-spacing:.2em; }
+  #loading-title { margin:0 0 9px; font-size:clamp(22px,4vw,30px); letter-spacing:-.035em; }
+  #status { min-height:1.5em; margin:0; color:var(--muted); font-size:13px; }
+  .progress-track { width:100%; height:9px; margin:22px 0 10px; overflow:hidden; border-radius:999px; background:#263033; }
+  #progress { width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--teal),var(--accent)); transition:width .12s linear; }
+  #progress-count { color:#edf1eb; font-size:12px; font-weight:750; font-variant-numeric:tabular-nums; }
+  .loading-note { margin:18px 0 0; color:#73817f; font-size:11px; }
+  #mapcredit,#toast { display:none !important; }
+  @media(max-width:600px) {
+    #menu-screen { gap:15px; padding:18px 14px; }
+    .build-tag { max-width:130px; text-align:right; line-height:1.5; }
+    .selector-lead { margin-bottom:17px; font-size:12px; }
+    .carousel { grid-template-columns:34px minmax(0,1fr) 34px; gap:5px; }
+    .arrow { width:32px; height:32px; font-size:21px; }
+    .preview-frame { aspect-ratio:16/10; }
+    .park-details { gap:9px; padding:13px 12px 14px; }
+    .park-overline { font-size:9px; }
+    .park-size { font-size:11px; }
+    .park-size span { display:block; font-size:9px; text-align:right; }
+    .slide-nav { margin-top:9px; }
+    .actions { margin-top:15px; }
+  }
+  @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; } }
 </style>
 </head>
 <body>
-<div id="game"><canvas id="bevy" tabindex="0"></canvas></div>
-<div id="mapbar">
-  <a id="mapcredit" target="_blank" rel="noopener" hidden></a>
-  <label for="map">Map</label><select id="map" aria-label="Choose map"></select>
-  <input id="mapfile" type="file" accept=".skate" hidden>
-  <select id="roommenu" hidden></select><button id="roombtn" type="button" hidden>Multiplayer</button>
-  <button id="roomleave" type="button" hidden>Leave</button>
-</div>
-<div id="hint"></div><div id="toast"></div>
-<div id="overlay"><div id="panel">
-  <h1>SKATE 3</h1>
-  <div id="status">Starting...</div>
-  <div class="bar"><div id="progress"></div></div>
-</div></div>
+<div id="game"><canvas id="bevy" tabindex="0" aria-label="Skate 3 game"></canvas></div>
+<main id="menu-screen" class="screen">
+  <header class="brand-row">
+    <div class="wordmark"><span class="wordmark-mark">S3</span><span class="wordmark-text">SKATE<span>3</span>WEB</span></div>
+    <span class="build-tag">CLEAN-ROOM WEB BUILD</span>
+  </header>
+  <section class="selector" aria-labelledby="menu-title">
+    <span class="eyebrow">CHOOSE A PARK</span>
+    <h1 id="menu-title">Where do you want to skate?</h1>
+    <p class="selector-lead">Pick a park. We’ll load it and drop you straight into the game.</p>
+    <div class="carousel" aria-label="Park selection carousel">
+      <button id="previous-map" class="arrow" type="button" aria-label="Previous park">‹</button>
+      <article id="map-slide" class="arriving" aria-live="polite"></article>
+      <button id="next-map" class="arrow" type="button" aria-label="Next park">›</button>
+    </div>
+    <div class="slide-nav"><div id="map-dots" aria-label="Choose a park"></div><span id="map-position"></span></div>
+    <div class="actions">
+      <button id="start-game" type="button" disabled>Start skating</button>
+      <p class="input-note">Keyboard or controller required for gameplay. No touchscreen pad.</p>
+    </div>
+    <p id="menu-status" role="status">Loading park list…</p>
+  </section>
+  <footer class="footer">Unofficial fan project. Skate 3 is a trademark of its respective owners.</footer>
+</main>
+<section id="overlay" class="screen" hidden aria-live="polite">
+  <div class="loading-card">
+    <div class="loading-mark">S3</div>
+    <p class="loading-eyebrow">GETTING THE PARK READY</p>
+    <h1 id="loading-title">Loading your park</h1>
+    <p id="status">Preparing game files…</p>
+    <div class="progress-track" role="progressbar" aria-label="Game download progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="progress"></div>
+    </div>
+    <div id="progress-count">0.0 / 0.0 MB</div>
+    <p class="loading-note">The game will start automatically when loading is complete.</p>
+  </div>
+</section>
+<a id="mapcredit" hidden></a>
+<div id="toast" aria-live="polite"></div>
+<script type="module" src="./menu.js"></script>
 <script type="module" src="./loader.js"></script>
-<script type="module" src="./touch.js"></script>
 </body>
 </html>
